@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="cache-control" content="no-cache">
+</head>
+<body>
+    <h1>Test runner</h1>
+    <h2 style="background-color: palevioletred">Important note</h2>
+    <p>For this test extension to run properly, you need a 'static' web-server running, to represent a 'remote' website. To do this, run
+    <ul>
+        <li>cd location-of-this-extension-on-disc</li>
+        <li>ruby -run -ehttpd . -p8000</li>
+    </ul>
+    We're using ruby to run a static web-server on port 8000, returning files from the extension folder. If you don't have ruby,
+    try another <a href="https://gist.github.com/willurd/5720255">one-liner</a>.
+    <h2>What's going on</h2>
+    <p>We're testing interaction between an extension background-script and a content-script running inside a webpage.
+        The webpage is loaded inside an iframe on the extension's background page. On webpage load, the content-script runs, opens a port,
+        and sends a message back to the extension's background (value of document.body.outerHTML).</p>
+    <p>We expect the extension background-script to receive the message. To see if this happened:
+        <ul>
+            <li>From the Chrome extensions page, view the extension console log using: 'Inspect views: background page'. The message is output there</li>
+            <li>Or, look at the 'Status' and 'Outcome' sections below. They should be updated once the test has run.</li>
+        </ul>
+    </p>
+    <p>Chrome 47 behaves as expected: message is received.</p>
+    <h2>Status</h2>
+    <div id="status"></div>
+    <h2>Outcome</h2>
+    <div id="outcome">Still determining outcome..</div>
+    <script src="js/test-runner.js"></script>
+</body>
+</html>
