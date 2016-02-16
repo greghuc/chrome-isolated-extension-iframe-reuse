@@ -1,0 +1,1 @@
+iframeLoader.newListeningManagedIframe(window);

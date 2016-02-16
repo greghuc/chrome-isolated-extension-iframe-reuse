@@ -18,6 +18,7 @@
     "background": {
         "scripts": [
           "js/lib/bluebird.js",
+          "js/iframe-loader.js",
           "js/background.js"
         ]
     },
