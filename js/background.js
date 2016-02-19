@@ -161,7 +161,8 @@ var getManagedFrame = function(type) {
 };
 
 chrome.runtime.onConnect.addListener(function(port) {
-    if (port.name.startsWith('run-tests#')) {
+    var isRunTestRequest = port.name.lastIndexOf('run-tests#', 0) === 0;
+    if (isRunTestRequest) {
         var frameType = port.name.split('#')[1];
         var managedFrame = getManagedFrame(frameType);
 
