@@ -1,4 +1,4 @@
-var runTests = function(resultPort) {
+var runTests = function(resultPort, managedFrame) {
     console.log('** Running tests **');
 
     var resultTimeoutMs = 2000;
@@ -8,10 +8,7 @@ var runTests = function(resultPort) {
         'http://localhost:8000/tests/testcase-two.html'
     ];
 
-    // var managedFrame = newIframeInBackgroundPage(window.document);
-    var managedFrame = newIframeInTab(false);
-    // var managedFrame = newTopLevelFrameInTab(false);
-    console.log('Testing reuse of frame: ' + managedFrame.name());
+    console.log('\nTesting reuse of frame: ' + managedFrame.name());
 
     return Promise.cast(urls).mapSeries(function (url) {
 
@@ -25,7 +22,7 @@ var runTests = function(resultPort) {
                 if (port.name === url) {
                     urlPort = port;
                     urlPortHandler = function (message) {
-                        console.log('Seen port message');
+                        console.log('Seen port message for: ' + port.name);
                         resolve(result(url, message, elapsedTime(startTime), false));
                     };
                     urlPort.onMessage.addListener(urlPortHandler);
@@ -34,7 +31,7 @@ var runTests = function(resultPort) {
 
 
             startTime = new Date();
-            console.log('Opening url in background page iframe: ' + url);
+            console.log('Opening url in iframe: ' + url);
             console.log('Waiting for port message..');
             managedFrame.open(url);
 
@@ -50,8 +47,24 @@ var runTests = function(resultPort) {
     }).then(function (results) {
         managedFrame.close();
 
-        console.log('DONE');
-        console.log(JSON.stringify(results, null, '\t'));
+        var wasSuccess = results.reduce(function(currentSuccess, result) {
+            return currentSuccess && !result.timeout;
+        }, true);
+
+        var message = wasSuccess ? 'Frame successfully reused: content-script ran on each loaded web-page' :
+                                   'Frame not successfully used: content-script did not run of each loaded web-page';
+
+        var annotatedResults = {
+            frameType: managedFrame.name(),
+            success: wasSuccess,
+            message: message,
+            details: results
+        }
+
+        console.log('Ran tests: ');
+        console.log(JSON.stringify(annotatedResults, null, '\t'));
+
+        resultPort.postMessage(annotatedResults);
 
         return null;
     });
@@ -115,6 +128,7 @@ var newTopLevelFrameInTab = function(isActive) {
         },
         open: function(url) {
             isCreated.then(function(tabId) {
+                console.log('Opening: ' + url);
                 chrome.tabs.update(tabId, { url: url });
             });
         },
@@ -126,11 +140,10 @@ var newTopLevelFrameInTab = function(isActive) {
     };
 };
 
-
-var result = function(url, data, elapsedTime, timeout) {
+var result = function(url, message, elapsedTime, timeout) {
     return {
         url: url,
-        data: data,
+        message: message,
         elapsedTime: elapsedTime,
         timeout: timeout
     };
@@ -138,14 +151,22 @@ var result = function(url, data, elapsedTime, timeout) {
 
 var elapsedTime = function(time) {
     return new Date() - time;
-}
+};
+
+var getManagedFrame = function(type) {
+    if (type === 'background-iframe') { return newIframeInBackgroundPage(window.document); }
+    if (type === 'inactive-tab-iframe') { return newIframeInTab(false); }
+    if (type === 'inactive-tab-top-frame') { return newTopLevelFrameInTab(false); }
+    throw new TypeError('Unknown frame type: ' + type);
+};
 
 chrome.runtime.onConnect.addListener(function(port) {
-    if (port.name !== 'run-tests') {
-        return;
-    }
+    if (port.name.startsWith('run-tests#')) {
+        var frameType = port.name.split('#')[1];
+        var managedFrame = getManagedFrame(frameType);
 
-    runTests(port);
+        runTests(port, managedFrame);
+    }
 });
 
 chrome.browserAction.onClicked.addListener(function() {

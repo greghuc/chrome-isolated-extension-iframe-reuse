@@ -15,20 +15,24 @@
     We're using ruby to run a static web-server on port 8000, returning files from the extension folder. If you don't have ruby,
     try another <a href="https://gist.github.com/willurd/5720255">one-liner</a>.
     <h2>What's going on</h2>
-    <p>We're testing interaction between an extension background-script and a content-script running inside a webpage.
-        The webpage is loaded inside an iframe on the extension's background page. On webpage load, the content-script runs, opens a port,
-        and sends a message back to the extension's background (value of document.body.outerHTML).</p>
-    <p>We expect the extension background-script to receive the message. To see if this happened:
+    <p>We're testing reuse of iframes to load web-pages (using iframe.src=new-url).
+        Specifically, we're checking that an extension's content script is loaded for each web-page loaded in the iframe.
+    </p>
+    <p>
+       Opening this web-page triggers the tests. An iframe is created, either on the extension's background page, or on a visible tab. The iframe loads two web-pages in sequence
+        (by setting iframe.src). On web-page load, an extension content-script runs, opens a port, and sends message back to the extension's background script (value of document.title).
+    </p>
+    <p>We expect the extension background-script to receive messages from both web-pages. To see if this happened:
         <ul>
-            <li>From the Chrome extensions page, view the extension console log using: 'Inspect views: background page'. The message is output there</li>
-            <li>Or, look at the 'Status' and 'Outcome' sections below. They should be updated once the test has run.</li>
+            <li>From the Chrome extensions page, view the extension console log using: 'Inspect views: background page'. The messages are output there</li>
+            <li>Or, look at the 'Outcome' and 'Status' and sections below. They should be updated once the tests has run.</li>
         </ul>
     </p>
-    <p>Chrome 47 behaves as expected: message is received.</p>
+    <p>Chrome 50 behaves as expected: messages are received.</p>
+    <h2>Outcome</h2>
+    <div id="outcome"></div>
     <h2>Status</h2>
     <div id="status"></div>
-    <h2>Outcome</h2>
-    <div id="outcome">Still determining outcome..</div>
     <script src="js/test-runner.js"></script>
 </body>
 </html>

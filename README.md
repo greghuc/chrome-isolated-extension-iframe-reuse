@@ -1,5 +1,8 @@
 # What is this?
-This project is a Chrome-browser extension. It tests the interaction between an extension background-script and a content-script running inside a webpage. The webpage is loaded inside an iframe on the extension's background page. On webpage load, the content-script runs, opens a port, and sends a message back to the extension's background (value of document.body.outerHTML). Chrome 47 behaves as expected: message is received.
+This project is a Chrome-browser extension. It tests that extension content-scripts correctly run in web-pages loaded inside iframes.
+An iframe is created, either on the extension's background page, or on a visible tab. The iframe loads two web-pages in sequence
+(by setting iframe.src). On web-page load, an extension content-script runs, opens a port, and sends message back to the extension's
+background script (value of document.title). We expect to see a message received from each loaded web-page. Chrome 50 behaves as expected.
         
 To run this extension, and review the message-passing:
 * Download this extension (git clone..)

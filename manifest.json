@@ -1,6 +1,6 @@
 {
     "manifest_version": 2,
-    "name": "Content-script frame behaviour tester",
+    "name": "Content-script tester: repeated frame use",
     "description": "This extension tests content-script behaviour for repeated iframe use",
     "version": "0.1",
     "icons": {

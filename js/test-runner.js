@@ -1,21 +1,26 @@
-var port = chrome.runtime.connect({ name: 'run-tests' });
+var testFrame = function(frameType, onComplete) {
+    var statusElement = document.getElementById('status');
+    statusElement.innerHTML += '<div>Loading multiple web-pages (with content scripts) in ' + frameType + '..</div>';
+    statusElement.innerHTML += '<div>Waiting for test results..</div>';
 
-var statusElement = document.getElementById('status');
-statusElement.innerHTML = '<div>Loading page in background page iframe..</div>';
-statusElement.innerHTML += '<div>Waiting for port message from iframe..</div>';
+    var port = chrome.runtime.connect({ name: 'run-tests#' + frameType });
 
-port.onMessage.addListener(function(message) {
-    statusElement.innerHTML += '<div>Got result: </div>';
-    var textNode = document.createTextNode(JSON.stringify(message, null, '\t'));
-    statusElement.appendChild(textNode);
+    port.onMessage.addListener(function(result) {
+        statusElement.innerHTML += '<div>Got result: </div>';
+        statusElement.innerHTML += '<pre>' + JSON.stringify(result, null, '\t') + '</pre>';
 
-    var gotMessage = (message.data !== null && message.data !== undefined) ? true : false;
-    var timeout = message.timeout;
-    var success = gotMessage && !timeout
+        var outcomeElement = document.getElementById('outcome');
+        var outcome = result.success ? 'PASS' : 'FAIL';
+        var outcomeColor = result.success ? 'rgba(76, 175, 80, 0.61)' : 'rgba(244, 67, 54, 0.35)';
 
-    var outcomeElement = document.getElementById('outcome');
-    outcomeElement.innerHTML = success ? '<div style="background-color: lightgreen">Success</div>' : '<div style="background-color: pink">Failure</div>';
-    outcomeElement.innerHTML += '<div>Got iframe message: ' + gotMessage + '</div>';
-    outcomeElement.innerHTML += '<div>Message timeout: ' + timeout + '</div>';
+        outcomeElement.innerHTML += '<div style="background-color: ' + outcomeColor + '">' + frameType + ': ' + outcome + ': ' + result.message + '</div>';
+
+        onComplete()
+    });
+};
+
+testFrame('background-iframe', function() {
+    testFrame('inactive-tab-iframe', function() {
+        testFrame('inactive-tab-top-frame', function() {});
+    });
 });
-
